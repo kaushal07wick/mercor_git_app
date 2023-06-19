@@ -103,7 +103,7 @@ def main():
     if submit_button and username and GITHUB_TOKEN:    
         repo_names = get_github_repo_names("kaushal07wick") #username oR URL
 
-        ans = get_files_from_github_repo(username, repo_names, "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") #extracting out the files
+        ans = get_files_from_github_repo(username, repo_names, "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") #extracting out the files
 
         #creating a chroma_db path
         CHROMA_DB_PATH = f'./chroma/{os.path.basename("Code-Data")}'
