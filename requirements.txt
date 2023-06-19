@@ -1,0 +1,14 @@
+streamlit
+
+langchain
+
+openai
+
+os
+
+requests
+
+argparse
+
+base64
+
