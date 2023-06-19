@@ -4,11 +4,9 @@ langchain
 
 openai
 
-os
-
 requests
 
-argparse
+chromadb
 
-base64
+tiktoken
 
