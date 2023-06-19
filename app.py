@@ -106,7 +106,7 @@ def main():
         ans = get_files_from_github_repo(username, repo_names, GITHUB_TOKEN) #extracting out the files
 
         #creating a chroma_db path
-        CHROMA_DB_PATH = f'./chroma/{os.path.basename("Code-Data-1")}'
+        CHROMA_DB_PATH = f'./chroma/{os.path.basename("Code-Data")}'
             
         chroma_db = None
             
