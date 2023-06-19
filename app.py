@@ -13,6 +13,7 @@ from langchain.docstore.document import Document
 from langchain.chains import RetrievalQA
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains.question_answering import load_qa_chain
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 load_dotenv()
 
@@ -81,7 +82,9 @@ def fetch_all_contents(files):
 def get_source_chunks(files):
     print("In get source chunks ...")
     source_chunks=[]
-    splitter = CharacterTextSplitter(separator=" ", chunk_size=1024, chunk_overlap=0)
+    splitter = text_splitter = RecursiveCharacterTextSplitter(    #using this splitter as it is used for generic text
+    chunk_size = 1024, chunk_overlap  = 20, length_function = len,
+)
     for source in fetch_all_contents(files):
         for chunk in splitter.split_text(source.page_content):
             source_chunks.append(Document(page_content=chunk, metadata=source.metadata))
@@ -91,39 +94,38 @@ def get_source_chunks(files):
 #main function     
 def main():
     # taking user input
-    # taking user input
-    with st.form('theform'):
-        username = st.text_input("Enter the Username: ")
-        submitted = st.form_submit_button('Submit')
-    with st.form("the_decond-form"):
-        GITHUB_TOKEN = st.text_input("Enter GitHub Token ")
-        submitted1 = st.form_submit_button("Submit")
+    username = st.text_input("Username: ")
+
+    GITHUB_TOKEN = st.text_input("Github Personal Access Token", key = "last_name")
+
+    submit_button = st.button("Submit")
     
-    repo_names = get_github_repo_names(username) #username oR URL
+    if submit_button and username and GITHUB_TOKEN:    
+        repo_names = get_github_repo_names(username) #username oR URL
 
-    ans = get_files_from_github_repo(username, repo_names, GITHUB_TOKEN) #extracting out the files
+        ans = get_files_from_github_repo(username, repo_names, GITHUB_TOKEN) #extracting out the files
 
-    #creating a chroma_db path
-    CHROMA_DB_PATH = f'./chroma/{os.path.basename("Code-Data-1")}'
-    
-    chroma_db = None
-    
-    #checking if the database is not present already, if not then create new one
-    if not os.path.exists(CHROMA_DB_PATH):
-        print(f'Creating Chroma DB at {CHROMA_DB_PATH}...')
-        source_chunks = get_source_chunks(ans) #get the chunked data
-        chroma_db = Chroma.from_documents(source_chunks, OpenAIEmbeddings(), persist_directory=CHROMA_DB_PATH)  #embedding the data using OpenAI embedding
-    else:
-        print(f'Loading Chroma DB from {CHROMA_DB_PATH} ... ')
-        chroma_db = Chroma(persist_directory=CHROMA_DB_PATH, embedding_function=OpenAIEmbeddings()) #loading the data from ChromDB
+        #creating a chroma_db path
+        CHROMA_DB_PATH = f'./chroma/{os.path.basename("Code-Data-1")}'
+            
+        chroma_db = None
+            
+        #checking if the database is not present already, if not then create new one
+        if not os.path.exists(CHROMA_DB_PATH):
+            print(f'Creating Chroma DB at {CHROMA_DB_PATH}...')
+            source_chunks = get_source_chunks(ans) #get the chunked data
+            chroma_db = Chroma.from_documents(source_chunks, OpenAIEmbeddings(), persist_directory=CHROMA_DB_PATH)  #embedding the data using OpenAI embedding
+        else:
+            print(f'Loading Chroma DB from {CHROMA_DB_PATH} ... ')
+            chroma_db = Chroma(persist_directory=CHROMA_DB_PATH, embedding_function=OpenAIEmbeddings()) #loading the data from ChromDB
 
-    prompt="Develop an algorithm to analyze a vector database of repositories and identify the most technically complex repository. The complexity should be determined based on the size and structure of the codebase, the number of dependencies, algorithmic complexity, integration and interoperability requirements, performance and optimization considerations, as well as the complexity of the domain. The repositories are represented in the vector database using OpenAI embeddings, and there are no specific language preferences. Once identified, provide the link to the repository."
+        prompt="Develop an algorithm to analyze a vector database of repositories and identify the most technically complex repository. The complexity should be determined based on the size and structure of the codebase, the number of dependencies, algorithmic complexity, integration and interoperability requirements, performance and optimization considerations, as well as the complexity of the domain. The repositories are represented in the vector database using OpenAI embeddings, and there are no specific language preferences. Once identified, provide the link to the repository."
 
-    #we will use the RetrievalQA chain to prompt the GPT to answer according to our need
-    qa_chain = load_qa_chain(OpenAI(temperature=1), chain_type="stuff")
-    qa = RetrievalQA(combine_documents_chain=qa_chain, retriever=chroma_db.as_retriever())
-    answer = qa.run(prompt) #the answer
-    st.response(answer)
+        #we will use the RetrievalQA chain to prompt the GPT to answer according to our need
+        qa_chain = load_qa_chain(OpenAI(temperature=1), chain_type="stuff")
+        qa = RetrievalQA(combine_documents_chain=qa_chain, retriever=chroma_db.as_retriever())
+        answer = qa.run(prompt) #the answer
+        st.response(answer)
 
 
 #runner code
