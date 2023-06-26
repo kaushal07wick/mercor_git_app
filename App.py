@@ -64,7 +64,6 @@ def get_source_chunks(files):
 
 
 def main():
-    #openai_api_key='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'
     # taking user input
     openai_api_key = st.sidebar.text_input('OpenAI API key', type='password')
     username = st.text_input("Username: ", key="first")
@@ -73,7 +72,6 @@ def main():
     
     if submit_button and username and GITHUB_TOKEN:  
         GITHUB_OWNER, GITHUB_REPO = parse_github_url(username)
-        #GITHUB_TOKEN = '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'
         all_files = get_files_from_github_repo(GITHUB_OWNER, GITHUB_REPO, GITHUB_TOKEN)
 
         CHROMA_DB_PATH = f'./chroma/{os.path.basename(GITHUB_REPO)}'
